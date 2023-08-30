@@ -48,9 +48,11 @@ Base.metadata.create_all(bind=engine)
 Session = sessionmaker(bind=engine)
 session = Session()
 
-player = session.query(Players).filter(Players.name == "john").first()
-player.username = "risinggh0ul"
-session.commit()
+# players = session.query(Players).filter(Players.name == "reed").all()
+# for player in players:
+#     session.delete(player)
+
+# session.commit()
 # players = session.query(Players).all()
 # new_players = sorted(players, key=lambda x: x.wins, reverse=True)
 # for player in new_players:

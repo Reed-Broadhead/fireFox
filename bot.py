@@ -6,10 +6,20 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 import random 
-from modles_commands import changeScore, new_player, wlRatio, leaderBoard, deckCheck, setDeck
+from modles_commands import changeScore, new_player, wlRatio, leaderBoard, deckCheck, setDeck, clearDecks
+
 
 
 client = commands.Bot(command_prefix = '!', intents = discord.Intents.default())
+
+#  function that checks players roles
+admin_role = "testRole"
+def is_allowed(roles):
+    allowed = False
+    for x in roles:
+        if x.name == admin_role:
+            allowed = True
+    return allowed
 
 @client.event
 async def on_ready():
@@ -21,35 +31,26 @@ async def on_ready():
         print(e)
 
 
-
-@client.tree.command(name="roll")
-async def roll(interaction: discord.Interaction):
-    is_allowed = False
-    for x in interaction.user.roles:
-        if x.name == "testRole":
-            is_allowed = True
-
-    await interaction.response.send_message(f"hey! {'leader' if is_allowed else 'suke'} ",
-    ephemeral=True)
-
-
 # hello 
 @client.tree.command(name="hello")
 async def hello(interaction: discord.Interaction):
     await interaction.response.send_message(f"hey {interaction.user.mention} {interaction.user.name}!",
     ephemeral=True)
 
-trueFactNames = ["john", "lucas", "lynn", "ian"]
-trueFactStatments = ["loves gay midget porn", "is gay", "loves weiners"]
 
-# true fact 
-@client.tree.command(name="true_facts")
-async def true_facts(interaction: discord.Interaction):
-    await interaction.response.send_message(f"{random.choice(trueFactNames)} {random.choice(trueFactStatments)}",
+# add player 
+@client.tree.command(name="add_player")
+@app_commands.describe(your_name = "name of new player")
+async def add_player(interaction: discord.Interaction, your_name: str):
+    new_player(your_name, interaction.user.name)
+    await interaction.response.send_message(new_player(your_name, interaction.user.name),
     ephemeral=True)
 
+    # 
+        # Score Commands
+    # 
 
-# change score 
+# change score / admin command
 @client.tree.command(name="change_score")
 @app_commands.describe(wol = "w for wins: l for loses", name = "name of player", amount = "can both add and subtract")
 @app_commands.choices(wol= [
@@ -58,17 +59,13 @@ async def true_facts(interaction: discord.Interaction):
 ])
 async def change_score(interaction: discord.Interaction, wol: str, name: str, amount: int):
     changeScore(wol, name, amount)
-    await interaction.response.send_message(f"{amount} { 'wins' if wol == 'w' else 'loses' } were added to {name}'s record",
-    ephemeral=True)
+    if is_allowed(interaction.user.roles):
+        await interaction.response.send_message(f"{amount} { 'wins' if wol == 'w' else 'loses' } were added to {name}'s record",
+        ephemeral=True)
+    else:
+        await interaction.response.send_message(f"wait! only {admin_role} have access to this command!",
+        ephemeral=True)
 
-
-# add player 
-@client.tree.command(name="add_player")
-@app_commands.describe(nname = "name of new player")
-async def add_player(interaction: discord.Interaction, nname: str):
-    new_player(nname)
-    await interaction.response.send_message(f"{nname} has been added to the roster",
-    ephemeral=True)
 
 
 # win loses ration 
@@ -83,14 +80,15 @@ async def wl_ratio(interaction: discord.Interaction, nname: str):
 async def leader_board(interaction: discord.Interaction):
     await interaction.response.send_message("\n".join(leaderBoard()))
 
-# deck check
+    #  
+        #  Deck Commands
+    # 
+
+# deck check / admin command
 @client.tree.command(name="deck_check")
 async def deck_check(interaction: discord.Interaction):
-    is_allowed = False
-    for x in interaction.user.roles:
-        if x.name == "testRole":
-            is_allowed = True
-    await interaction.response.send_message("\n".join(deckCheck()) if is_allowed else "only high wizards are allowed to use this command.",
+    # is_allowed(interaction.user.roles)
+    await interaction.response.send_message("\n".join(deckCheck()) if is_allowed(interaction.user.roles) else "only high wizards are allowed to use this command.",
     ephemeral=True)
 
 # set deck
@@ -100,9 +98,19 @@ async def set_deck(interaction: discord.Interaction, deck: str):
     await interaction.response.send_message(setDeck(interaction.user.name, deck),
     ephemeral=True)
 
-# clear deck
+# clear deck / admin command
+@client.tree.command(name="clear_decks")
+async def clear_decks(interaction: discord.Interaction):
+    await interaction.response.send_message(clearDecks() if is_allowed(interaction.user.roles) else f"only {admin_role} are allowed to use this command.", 
+    ephemeral=True)
 
-# ban list
+    #
+        # ban list
+    #
+
+# sets ban list
+
+# looks at ban list
 
 
 client.run(os.getenv("TOKEN"))

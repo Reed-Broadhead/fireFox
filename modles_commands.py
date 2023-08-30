@@ -12,6 +12,33 @@ Session = sessionmaker(bind=engine)
 # x = input("name:")
 # y = input("wins:")
 
+
+
+
+def new_player(playerName, discord_username):
+    session = Session()
+
+    players = session.query(Players).all()
+
+    
+    has_acount = False
+
+    for player in players:
+        
+        if player.username == discord_username:
+            return "you already have an acount."
+        else:
+            pass
+
+    session.add(Players(name=playerName, wins=0, loses=0, username=discord_username))
+    session.commit()
+    return "you have been successfully added!"
+
+    # 
+        # score commands
+    # 
+
+# Change Score
 def changeScore( wol, name, amount):
     session = Session()
     print(wol)
@@ -23,14 +50,7 @@ def changeScore( wol, name, amount):
 
     session.commit()
 
-
-def new_player(nname):
-    session = Session()
-
-    session.add(Players(name=nname, wins= 0, loses= 0))
-
-    session.commit()
-
+# win lose ration
 def wlRatio(nname):
     session = Session()
     player = session.query(Players).filter(Players.name == nname).first()
@@ -56,6 +76,11 @@ def leaderBoard():
     return l
     session.close()
 
+    # 
+        # Deck Commands 
+    # 
+
+# Deck Check Command
 def deckCheck():
     session = Session()
 
@@ -68,6 +93,7 @@ def deckCheck():
     return l 
     session.close()
 
+# set deck command
 def setDeck(name, deck):
     session = Session()
 
@@ -75,9 +101,26 @@ def setDeck(name, deck):
 
     res = 'deck selection complete'
 
-    if player.deck != False:
+    if player.deck != None:
         res = "deck already selected"
     else:
         player.deck = deck 
         
+    session.commit()   
     return res
+
+# clear decks command
+def clearDecks():
+    session = Session()
+
+    players = session.query(Players).all()
+
+    for player in players:
+        player.deck = None
+    
+    session.commit()
+    return "decks cleared!"
+
+#
+    # ban list commands
+#
